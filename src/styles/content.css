@@ -1,0 +1,293 @@
+/**
+ * Gemini 对话导航助手 - 样式表
+ * V1.0
+ */
+
+/* 导航面板主容器 */
+.gemini-nav-panel {
+  position: fixed;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  width: 260px;
+  max-height: 70vh;
+  background: rgba(32, 33, 36, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 999999;
+  font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 折叠状态 */
+.gemini-nav-panel.collapsed {
+  width: 48px;
+  max-height: 48px;
+  border-radius: 24px;
+}
+
+.gemini-nav-panel.collapsed .gemini-nav-title,
+.gemini-nav-panel.collapsed .gemini-nav-list-container,
+.gemini-nav-panel.collapsed .gemini-nav-empty {
+  display: none !important;
+}
+
+.gemini-nav-panel.collapsed .gemini-nav-header {
+  padding: 12px;
+  justify-content: center;
+}
+
+/* 头部区域 */
+.gemini-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.gemini-nav-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+  letter-spacing: 0.3px;
+}
+
+.gemini-nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  color: #9aa0a6;
+  transition: all 0.2s ease;
+}
+
+.gemini-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e8eaed;
+}
+
+/* 列表容器 */
+.gemini-nav-list-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+/* 自定义滚动条 */
+.gemini-nav-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gemini-nav-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gemini-nav-list-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.gemini-nav-list-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 导航列表 */
+.gemini-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 导航项 */
+.gemini-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.gemini-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gemini-nav-item.active {
+  background: rgba(138, 180, 248, 0.15);
+  border-left-color: #8ab4f8;
+}
+
+.gemini-nav-item-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-weight: 500;
+  color: #9aa0a6;
+  flex-shrink: 0;
+}
+
+.gemini-nav-item.active .gemini-nav-item-number {
+  background: rgba(138, 180, 248, 0.3);
+  color: #8ab4f8;
+}
+
+.gemini-nav-item-text {
+  flex: 1;
+  font-size: 13px;
+  color: #bdc1c6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.gemini-nav-item:hover .gemini-nav-item-text {
+  color: #e8eaed;
+}
+
+.gemini-nav-item.active .gemini-nav-item-text {
+  color: #e8eaed;
+}
+
+/* 空状态 */
+.gemini-nav-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: #9aa0a6;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 高亮效果（点击跳转时） */
+.gemini-nav-highlight {
+  animation: highlightPulse 2s ease-out;
+}
+
+@keyframes highlightPulse {
+  0% {
+    background-color: rgba(138, 180, 248, 0.3);
+    box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.2);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* 浅色模式适配 */
+@media (prefers-color-scheme: light) {
+  .gemini-nav-panel {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  .gemini-nav-header {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .gemini-nav-title {
+    color: #202124;
+  }
+
+  .gemini-nav-toggle {
+    background: rgba(0, 0, 0, 0.05);
+    color: #5f6368;
+  }
+
+  .gemini-nav-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #202124;
+  }
+
+  .gemini-nav-list-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .gemini-nav-list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .gemini-nav-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .gemini-nav-item.active {
+    background: rgba(66, 133, 244, 0.1);
+    border-left-color: #4285f4;
+  }
+
+  .gemini-nav-item-number {
+    background: rgba(0, 0, 0, 0.06);
+    color: #5f6368;
+  }
+
+  .gemini-nav-item.active .gemini-nav-item-number {
+    background: rgba(66, 133, 244, 0.2);
+    color: #4285f4;
+  }
+
+  .gemini-nav-item-text {
+    color: #5f6368;
+  }
+
+  .gemini-nav-item:hover .gemini-nav-item-text,
+  .gemini-nav-item.active .gemini-nav-item-text {
+    color: #202124;
+  }
+
+  .gemini-nav-empty {
+    color: #5f6368;
+  }
+
+  .gemini-nav-highlight {
+    animation: highlightPulseLight 2s ease-out;
+  }
+
+  @keyframes highlightPulseLight {
+    0% {
+      background-color: rgba(66, 133, 244, 0.2);
+      box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.15);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .gemini-nav-panel {
+    right: 8px;
+    width: 200px;
+    max-height: 50vh;
+  }
+
+  .gemini-nav-panel.collapsed {
+    width: 40px;
+    max-height: 40px;
+  }
+}
