@@ -34,7 +34,9 @@
 
 .gemini-nav-panel.collapsed .gemini-nav-title,
 .gemini-nav-panel.collapsed .gemini-nav-list-container,
-.gemini-nav-panel.collapsed .gemini-nav-empty {
+.gemini-nav-panel.collapsed .gemini-nav-empty,
+.gemini-nav-panel.collapsed .gemini-nav-search,
+.gemini-nav-panel.collapsed .gemini-nav-no-results {
   display: none !important;
 }
 
@@ -51,6 +53,12 @@
   padding: 14px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+}
+
+.gemini-nav-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .gemini-nav-title {
@@ -77,6 +85,103 @@
 .gemini-nav-toggle:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #e8eaed;
+}
+
+/* 刷新按钮 */
+.gemini-nav-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  color: #9aa0a6;
+  transition: all 0.2s ease;
+}
+
+.gemini-nav-refresh:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e8eaed;
+}
+
+.gemini-nav-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gemini-nav-refresh.spinning svg {
+  animation: navSpin 0.8s linear infinite;
+}
+
+@keyframes navSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 搜索框 */
+.gemini-nav-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.gemini-nav-search-icon {
+  color: #9aa0a6;
+  flex-shrink: 0;
+}
+
+.gemini-nav-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: #e8eaed;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.gemini-nav-search-input::placeholder {
+  color: #5f6368;
+}
+
+.gemini-nav-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  cursor: pointer;
+  color: #9aa0a6;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.gemini-nav-search-clear:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #e8eaed;
+}
+
+/* 无匹配结果 */
+.gemini-nav-no-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  color: #9aa0a6;
+  font-size: 12px;
+  text-align: center;
 }
 
 /* 列表容器 */
@@ -212,13 +317,41 @@
     color: #202124;
   }
 
-  .gemini-nav-toggle {
+  .gemini-nav-toggle,
+  .gemini-nav-refresh {
     background: rgba(0, 0, 0, 0.05);
     color: #5f6368;
   }
 
-  .gemini-nav-toggle:hover {
+  .gemini-nav-toggle:hover,
+  .gemini-nav-refresh:hover {
     background: rgba(0, 0, 0, 0.1);
+    color: #202124;
+  }
+
+  .gemini-nav-search {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .gemini-nav-search-icon {
+    color: #5f6368;
+  }
+
+  .gemini-nav-search-input {
+    color: #202124;
+  }
+
+  .gemini-nav-search-input::placeholder {
+    color: #9aa0a6;
+  }
+
+  .gemini-nav-search-clear {
+    background: rgba(0, 0, 0, 0.08);
+    color: #5f6368;
+  }
+
+  .gemini-nav-search-clear:hover {
+    background: rgba(0, 0, 0, 0.15);
     color: #202124;
   }
 
@@ -258,7 +391,8 @@
     color: #202124;
   }
 
-  .gemini-nav-empty {
+  .gemini-nav-empty,
+  .gemini-nav-no-results {
     color: #5f6368;
   }
 

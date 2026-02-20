@@ -19,6 +19,7 @@
   let questionNodes = [];
   let isCollapsed = false;
   let currentActiveIndex = -1;
+  let currentSearchQuery = '';
 
   /**
    * 创建导航面板
@@ -35,17 +36,36 @@
     panel.innerHTML = `
       <div class="gemini-nav-header">
         <span class="gemini-nav-title">对话导航</span>
-        <button class="gemini-nav-toggle" title="折叠/展开">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
+        <div class="gemini-nav-header-actions">
+          <button class="gemini-nav-refresh" title="扫描全部对话">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </button>
+          <button class="gemini-nav-toggle" title="折叠/展开">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="gemini-nav-search">
+        <svg class="gemini-nav-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="gemini-nav-search-input" placeholder="搜索对话...">
+        <button class="gemini-nav-search-clear" title="清除" style="display:none">×</button>
       </div>
       <div class="gemini-nav-list-container">
         <ul class="gemini-nav-list"></ul>
       </div>
       <div class="gemini-nav-empty">
         <span>暂无对话记录</span>
+      </div>
+      <div class="gemini-nav-no-results" style="display:none">
+        <span>无匹配结果</span>
       </div>
     `;
 
@@ -54,6 +74,26 @@
     // 绑定折叠按钮事件
     const toggleBtn = panel.querySelector('.gemini-nav-toggle');
     toggleBtn.addEventListener('click', togglePanel);
+
+    // 绑定刷新按钮事件
+    const refreshBtn = panel.querySelector('.gemini-nav-refresh');
+    refreshBtn.addEventListener('click', () => initScanAll(true));
+
+    // 绑定搜索框事件
+    const searchInput = panel.querySelector('.gemini-nav-search-input');
+    const searchClear = panel.querySelector('.gemini-nav-search-clear');
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value;
+      searchClear.style.display = query ? 'flex' : 'none';
+      filterNavItems(query);
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClear.style.display = 'none';
+      filterNavItems('');
+    });
 
     return panel;
   }
@@ -89,6 +129,44 @@
       return cleanText;
     }
     return cleanText.substring(0, maxLength) + '...';
+  }
+
+  /**
+   * 获取页面主滚动容器
+   */
+  function getScrollElement() {
+    const selectors = [
+      'infinite-scroller',
+      'chat-history',
+      'chat-window',
+      '[class*="conversation-container"]',
+      '[class*="chat-history"]',
+      'main'
+    ];
+    for (const sel of selectors) {
+      try {
+        const el = document.querySelector(sel);
+        if (el && el.scrollHeight > el.clientHeight + 10) return el;
+      } catch (e) {}
+    }
+
+    // 找任意一条消息，向上遍历找到真正可滚动的祖先
+    const anyMsg = document.querySelector(
+      '[data-message-author-role], .user-message, [class*="message-row"], [class*="turn"]'
+    );
+    if (anyMsg) {
+      let el = anyMsg.parentElement;
+      while (el && el !== document.documentElement) {
+        if (el.scrollHeight > el.clientHeight + 10) {
+          const ov = window.getComputedStyle(el).overflowY;
+          if (ov === 'scroll' || ov === 'auto' || ov === 'overlay') return el;
+        }
+        el = el.parentElement;
+      }
+    }
+
+    // 兜底：始终返回 documentElement
+    return document.documentElement;
   }
 
   /**
@@ -135,6 +213,31 @@
     }
 
     return userMessages;
+  }
+
+  /**
+   * 按关键字过滤导航条目
+   */
+  function filterNavItems(query) {
+    currentSearchQuery = query.trim().toLowerCase();
+    const panel = document.getElementById(CONFIG.NAV_PANEL_ID);
+    if (!panel) return;
+
+    const items = panel.querySelectorAll('.gemini-nav-item');
+    const noResults = panel.querySelector('.gemini-nav-no-results');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+      const textEl = item.querySelector('.gemini-nav-item-text');
+      const text = (textEl.textContent + ' ' + (textEl.title || '')).toLowerCase();
+      const matches = !currentSearchQuery || text.includes(currentSearchQuery);
+      item.style.display = matches ? '' : 'none';
+      if (matches) visibleCount++;
+    });
+
+    if (noResults) {
+      noResults.style.display = (currentSearchQuery && visibleCount === 0) ? 'flex' : 'none';
+    }
   }
 
   /**
@@ -187,6 +290,11 @@
 
     // 更新当前高亮
     updateActiveItem();
+
+    // 重新应用搜索过滤
+    if (currentSearchQuery) {
+      filterNavItems(currentSearchQuery);
+    }
 
     // 保存到 storage
     saveToStorage(questions.map(q => truncateText(q.textContent || '')));
@@ -285,6 +393,85 @@
   }
 
   /**
+   * 滚动到顶部强制加载所有历史消息，再跳回原位
+   * @param {boolean} manual - 是否为手动触发（显示加载状态）
+   */
+  async function initScanAll(manual = false) {
+    const panel = document.getElementById(CONFIG.NAV_PANEL_ID);
+    const refreshBtn = panel && panel.querySelector('.gemini-nav-refresh');
+
+    if (refreshBtn) {
+      refreshBtn.classList.add('spinning');
+      refreshBtn.disabled = true;
+    }
+
+    try {
+      const scrollEl = getScrollElement();
+      const isDocEl = scrollEl === document.documentElement;
+      const savedWinPos = window.scrollY;
+      const savedElPos = isDocEl ? 0 : scrollEl.scrollTop;
+
+      const EXTRA_SELECTORS = 'infinite-scroller, chat-history, chat-window, main, [class*="conversation-container"], [class*="chat-history"]';
+
+      // 对所有容器执行同一个滚动位置，确保 infinite-scroller 等也被控制
+      const scrollAllTo = (pos) => {
+        window.scrollTo(0, pos);
+        document.documentElement.scrollTop = pos;
+        document.body.scrollTop = pos;
+        if (!isDocEl) scrollEl.scrollTop = pos;
+        document.querySelectorAll(EXTRA_SELECTORS)
+          .forEach(el => { try { el.scrollTop = pos; } catch (e) {} });
+      };
+
+      // 取所有容器中最大的 scrollHeight，避免因 scrollEl 选错而漏检高度变化
+      const getHeight = () => {
+        let h = document.documentElement.scrollHeight;
+        document.querySelectorAll(EXTRA_SELECTORS)
+          .forEach(el => { if (el.scrollHeight > h) h = el.scrollHeight; });
+        return h;
+      };
+
+      let prevHeight = getHeight();
+      const MAX_ITER = 15;
+
+      for (let i = 0; i < MAX_ITER; i++) {
+        scrollAllTo(0);
+
+        // 轮询等待新内容出现（每 200ms 检查一次，最多等 3s）
+        const deadline = Date.now() + 3000;
+        let newHeight = prevHeight;
+        while (Date.now() < deadline) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+          newHeight = getHeight();
+          if (newHeight > prevHeight) break;
+        }
+
+        if (newHeight <= prevHeight) break; // 高度不再增加，已到真正顶端
+        prevHeight = newHeight;
+
+        // 等待 DOM 完全稳定，再向下滚动重置所有容器的哨兵可见状态
+        await new Promise(resolve => setTimeout(resolve, 800));
+        scrollAllTo(500);
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      updateNavList();
+
+      // 跳回原位
+      await new Promise(resolve => setTimeout(resolve, 50));
+      window.scrollTo(0, savedWinPos);
+      if (!isDocEl) scrollEl.scrollTop = savedElPos;
+
+    } finally {
+      // 无论是否出错，始终停止旋转
+      if (refreshBtn) {
+        refreshBtn.classList.remove('spinning');
+        refreshBtn.disabled = false;
+      }
+    }
+  }
+
+  /**
    * 初始化 MutationObserver
    */
   function initObserver() {
@@ -319,6 +506,12 @@
   function initScrollListener() {
     const debouncedUpdate = debounce(updateActiveItem, 100);
     window.addEventListener('scroll', debouncedUpdate, { passive: true });
+
+    // 同时监听自定义滚动容器（Gemini 可能使用非 window 滚动）
+    const scrollEl = getScrollElement();
+    if (scrollEl && scrollEl !== document.documentElement) {
+      scrollEl.addEventListener('scroll', debouncedUpdate, { passive: true });
+    }
   }
 
   /**
@@ -338,6 +531,9 @@
 
     // 首次扫描
     setTimeout(updateNavList, 1000);
+
+    // 自动滚动加载全部历史消息
+    setTimeout(() => initScanAll(), 1500);
 
     // 初始化观察器
     initObserver();
