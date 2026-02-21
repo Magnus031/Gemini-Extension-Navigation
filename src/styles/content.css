@@ -53,6 +53,12 @@
   padding: 14px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.gemini-nav-header.dragging {
+  cursor: grabbing;
 }
 
 .gemini-nav-header-actions {

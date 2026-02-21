@@ -22,6 +22,70 @@
   let currentSearchQuery = '';
 
   /**
+   * 让面板可拖动，位置持久化到 localStorage
+   */
+  function makeDraggable(panel) {
+    const header = panel.querySelector('.gemini-nav-header');
+    const STORAGE_POS = 'gemini_nav_pos';
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    // 恢复上次保存的位置
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_POS));
+      if (saved) {
+        const maxLeft = window.innerWidth - panel.offsetWidth;
+        const maxTop  = window.innerHeight - 60;
+        panel.style.right     = 'auto';
+        panel.style.transform = 'none';
+        panel.style.left = Math.max(0, Math.min(saved.left, maxLeft)) + 'px';
+        panel.style.top  = Math.max(0, Math.min(saved.top,  maxTop))  + 'px';
+      }
+    } catch (e) {}
+
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button')) return; // 按钮点击不触发拖动
+      isDragging = true;
+
+      // 首次拖动时把 right/transform 转换为 left/top
+      const rect = panel.getBoundingClientRect();
+      panel.style.right     = 'auto';
+      panel.style.transform = 'none';
+      panel.style.left = rect.left + 'px';
+      panel.style.top  = rect.top  + 'px';
+
+      startX    = e.clientX;
+      startY    = e.clientY;
+      startLeft = rect.left;
+      startTop  = rect.top;
+
+      header.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      let newLeft = startLeft + (e.clientX - startX);
+      let newTop  = startTop  + (e.clientY - startY);
+      // 限制在视口内
+      newLeft = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  newLeft));
+      newTop  = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newTop));
+      panel.style.left = newLeft + 'px';
+      panel.style.top  = newTop  + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      header.classList.remove('dragging');
+      localStorage.setItem(STORAGE_POS, JSON.stringify({
+        left: parseFloat(panel.style.left),
+        top:  parseFloat(panel.style.top)
+      }));
+    });
+  }
+
+  /**
    * 创建导航面板
    */
   function createNavPanel() {
@@ -94,6 +158,8 @@
       searchClear.style.display = 'none';
       filterNavItems('');
     });
+
+    makeDraggable(panel);
 
     return panel;
   }
